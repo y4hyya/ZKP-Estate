@@ -142,3 +142,4 @@ frontend/out/
 # Test artifacts
 test-results/
 coverage/
+hardhat.config.ts
