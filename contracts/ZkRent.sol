@@ -1,17 +1,19 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
-import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/utils/Counters.sol";
-import "./VerifierStub.sol";
+// import "@openzeppelin/contracts/utils/Counters.sol"; // Deprecated, using simple counter
+import "./mocks/VerifierStub.sol";
 
 /**
  * @title ZkRent
  * @dev Main contract for zero-knowledge rental protocol
  */
 contract ZkRent is ReentrancyGuard, Ownable {
-    using Counters for Counters.Counter;
+    // Simple counter replacement for deprecated Counters
+    uint256 private _policyCounter;
+    uint256 private _leaseCounter;
 
     // Events
     event PolicyCreated(uint256 indexed policyId, address indexed landlord, uint256 rentAmount, uint256 deposit);
@@ -43,8 +45,7 @@ contract ZkRent is ReentrancyGuard, Ownable {
     }
 
     // State variables
-    Counters.Counter private _policyIds;
-    Counters.Counter private _leaseIds;
+    // Removed Counters usage - using simple uint256 counters
     
     mapping(uint256 => RentalPolicy) public policies;
     mapping(uint256 => Lease) public leases;
@@ -72,8 +73,8 @@ contract ZkRent is ReentrancyGuard, Ownable {
         require(_deposit > 0, "Deposit must be positive");
         require(_duration > 0, "Duration must be positive");
 
-        _policyIds.increment();
-        uint256 policyId = _policyIds.current();
+        _policyCounter++;
+        uint256 policyId = _policyCounter;
 
         policies[policyId] = RentalPolicy({
             landlord: msg.sender,
@@ -104,8 +105,8 @@ contract ZkRent is ReentrancyGuard, Ownable {
         uint256 totalAmount = policy.rentAmount + policy.deposit;
         require(msg.value >= totalAmount, "Insufficient payment");
 
-        _leaseIds.increment();
-        uint256 leaseId = _leaseIds.current();
+        _leaseCounter++;
+        uint256 leaseId = _leaseCounter;
 
         uint256 startTime = block.timestamp;
         uint256 endTime = startTime + (policy.duration * 1 days);
@@ -181,11 +182,11 @@ contract ZkRent is ReentrancyGuard, Ownable {
      * @dev Verify ZK proof (stub implementation for demo)
      */
     function verifyProof(
-        bytes32 _proofHash,
+        bytes calldata _proof,
         uint256[] calldata _publicInputs
     ) external view returns (bool) {
         // In production, this would call the actual ZK verifier
-        return verifier.verifyProof(_proofHash, _publicInputs);
+        return verifier.verify(_proof, _publicInputs);
     }
 
     /**

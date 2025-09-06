@@ -45,7 +45,7 @@ contract EligibilityGate {
      * @dev Submit ZK proof for eligibility verification
      * @param policyId The policy ID to verify eligibility for
      * @param proof The ZK proof
-     * @param publicInputs Public inputs in order: [minAge, incomeMul, rentWei, needCleanRec(0/1), policyId, nullifierHi, nullifierLo]
+     * @param publicInputs Public inputs in order: [minAge, incomeMul, rentWei, needCleanRec(0/1), policyId, nullifier]
      * @notice Public inputs layout must match Noir circuit expectations
      */
     function submitZk(
@@ -54,7 +54,7 @@ contract EligibilityGate {
         uint256[] calldata publicInputs
     ) external {
         // Validate public inputs length
-        require(publicInputs.length == 7, "EligibilityGate: Invalid public inputs length");
+        require(publicInputs.length == 6, "EligibilityGate: Invalid public inputs length");
         
         // Get policy from registry
         Domain.Policy memory policy = policyRegistry.getPolicy(policyId);
@@ -69,8 +69,8 @@ contract EligibilityGate {
         require(publicInputs[3] == (policy.needCleanRec ? 1 : 0), "EligibilityGate: needCleanRec mismatch");
         require(publicInputs[4] == policyId, "EligibilityGate: policyId mismatch");
         
-        // Extract nullifier from public inputs (combine hi and lo parts)
-        bytes32 nullifier = bytes32((uint256(publicInputs[5]) << 128) | uint256(publicInputs[6]));
+        // Extract nullifier from public inputs (single 256-bit value)
+        bytes32 nullifier = bytes32(publicInputs[5]);
         
         // Check nullifier not used before (replay protection)
         require(!nullifierUsed[nullifier], "EligibilityGate: Nullifier already used");
@@ -122,13 +122,4 @@ contract EligibilityGate {
         return address(verifier);
     }
 
-    /**
-     * @dev Helper function to construct nullifier from hi and lo parts
-     * @param nullifierHi High 128 bits of nullifier
-     * @param nullifierLo Low 128 bits of nullifier
-     * @return nullifier Combined 256-bit nullifier
-     */
-    function constructNullifier(uint256 nullifierHi, uint256 nullifierLo) external pure returns (bytes32) {
-        return bytes32((nullifierHi << 128) | nullifierLo);
-    }
 }
