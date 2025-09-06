@@ -220,4 +220,14 @@ contract LeaseEscrow is ReentrancyGuard {
 
     // Receive function to accept ETH
     receive() external payable {}
+
+    /**
+     * @dev Test function for reentrancy testing
+     * @notice This function is only for testing purposes
+     */
+    function triggerReentrancy() external {
+        // This function is called by malicious contracts during reentrancy tests
+        // It should be protected by ReentrancyGuard
+        require(msg.sender == address(this), "LeaseEscrow: Invalid caller");
+    }
 }

@@ -5,38 +5,36 @@ import "../LeaseEscrow.sol";
 
 /**
  * @title MaliciousReceiver
- * @dev Mock contract to test reentrancy protection
- * @notice This contract attempts to reenter LeaseEscrow functions
+ * @dev Contract that attempts reentrancy attacks on LeaseEscrow
+ * @notice This contract is used for testing reentrancy protection
  */
 contract MaliciousReceiver {
-    LeaseEscrow public leaseEscrow;
-    bool public reentrancyAttempted = false;
+    LeaseEscrow public immutable leaseEscrow;
+    bool public attackAttempted = false;
 
     constructor(address payable _leaseEscrow) {
         leaseEscrow = LeaseEscrow(_leaseEscrow);
     }
 
     /**
-     * @dev Receive function that attempts reentrancy
+     * @dev Fallback function that attempts reentrancy
+     * @notice This function will be called when ETH is sent to this contract
      */
     receive() external payable {
-        if (!reentrancyAttempted) {
-            reentrancyAttempted = true;
-            // Attempt to call a function that should be protected
-            // This will fail due to reentrancy guard
-            try leaseEscrow.getBalance() {
-                // This should not execute due to reentrancy protection
-            } catch {
-                // Expected to fail
-            }
+        if (!attackAttempted) {
+            attackAttempted = true;
+            // Attempt to call back into LeaseEscrow during the transfer
+            // This should be prevented by ReentrancyGuard
+            leaseEscrow.triggerReentrancy();
         }
     }
 
     /**
-     * @dev Function to trigger reentrancy attempt
+     * @dev Function to trigger reentrancy attack
+     * @notice This function is called by the test to initiate the attack
      */
     function triggerReentrancy() external {
-        // This function can be called to test reentrancy protection
-        leaseEscrow.getBalance();
+        // This function is called by the malicious contract during receive()
+        // The actual reentrancy attempt happens in the receive() function
     }
 }

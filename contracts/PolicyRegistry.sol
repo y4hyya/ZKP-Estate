@@ -72,7 +72,7 @@ contract PolicyRegistry {
      * @return policy The policy struct
      */
     function getPolicy(uint256 policyId) external view returns (Domain.Policy memory) {
-        require(policyId > 0 && policyId < _nextPolicyId, "PolicyRegistry: Invalid policy ID");
+        require(policyId < _nextPolicyId, "PolicyRegistry: Invalid policy ID");
         return _policies[policyId];
     }
 
@@ -82,7 +82,7 @@ contract PolicyRegistry {
      * @return isOwner True if caller is the policy owner
      */
     function isPolicyOwner(uint256 policyId) external view returns (bool) {
-        require(policyId > 0 && policyId < _nextPolicyId, "PolicyRegistry: Invalid policy ID");
+        require(policyId < _nextPolicyId, "PolicyRegistry: Invalid policy ID");
         return _policies[policyId].owner == msg.sender;
     }
 

@@ -2,6 +2,7 @@
 pragma solidity ^0.8.24;
 
 import "./interfaces/IVerifier.sol";
+import "./interfaces/IEligibility.sol";
 import "./PolicyRegistry.sol";
 import "./lib/Domain.sol";
 
@@ -10,7 +11,7 @@ import "./lib/Domain.sol";
  * @dev Contract for managing tenant eligibility verification using ZK proofs
  * @notice Handles ZK proof submission, nullifier tracking, and eligibility management
  */
-contract EligibilityGate {
+contract EligibilityGate is IEligibility {
     using Domain for Domain.Policy;
 
     // Dependencies
@@ -93,7 +94,7 @@ contract EligibilityGate {
      * @param policyId The policy ID to check eligibility for
      * @return isEligible True if the address is eligible for the policy
      */
-    function isEligible(address who, uint256 policyId) external view returns (bool) {
+    function isEligible(address who, uint256 policyId) external view override returns (bool) {
         return eligible[policyId][who];
     }
 
