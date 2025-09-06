@@ -1,0 +1,15 @@
+{
+  "id": {
+    "documentNumber": "A123456789",
+    "documentType": "passport",
+    "fullName": "John Doe",
+    "dateOfBirth": "1995-06-15",
+    "nationality": "US",
+    "verifiedAt": "2025-09-06T20:00:00Z"
+  },
+  "metadata": {
+    "verificationProvider": "id-verifier-stub",
+    "verificationLevel": "high",
+    "timestamp": "2025-09-06T20:00:00Z"
+  }
+}

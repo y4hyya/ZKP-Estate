@@ -1,0 +1,30 @@
+{
+  "bank": {
+    "accountNumber": "9876543210",
+    "bankName": "Global Trust Bank",
+    "accountHolder": "Jane Smith",
+    "balance": 120000,
+    "currency": "USD",
+    "verifiedAt": "2025-09-06T20:00:00Z"
+  },
+  "id": {
+    "documentNumber": "B987654321",
+    "documentType": "drivers_license",
+    "fullName": "Jane Smith",
+    "dateOfBirth": "1992-03-22",
+    "nationality": "CA",
+    "verifiedAt": "2025-09-06T20:00:00Z"
+  },
+  "location": {
+    "latitude": 43.6532,
+    "longitude": -79.3832,
+    "country": "CA",
+    "city": "Toronto",
+    "verifiedAt": "2025-09-06T20:00:00Z"
+  },
+  "metadata": {
+    "verificationProvider": "complete-verifier-stub",
+    "verificationLevel": "maximum",
+    "timestamp": "2025-09-06T20:00:00Z"
+  }
+}
