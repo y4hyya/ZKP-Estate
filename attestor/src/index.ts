@@ -1,216 +1,170 @@
-import Fastify from "fastify";
-import cors from "@fastify/cors";
-import { ethers } from "ethers";
-import dotenv from "dotenv";
-import { 
-  Attestation, 
-  generateNullifier, 
-  calculatePassBitmask, 
-  allChecksPassed 
-} from "./eip712";
-import { verifyTLSNProof, validateTLSNProof, TLSNProof } from "./verify_tlsn";
-import { signAttestation } from "./sign";
+import Fastify from 'fastify';
+import { ethers } from 'ethers';
+import dotenv from 'dotenv';
+import { AttestorSigner } from './sign.js';
+import { TLSNotaryVerifier, TLSNotaryProof } from './verify_tlsn.js';
+import { createEIP712Domain, Attestation } from './eip712.js';
 
 // Load environment variables
 dotenv.config();
 
-// Environment variables
-const ATTESTOR_PK = process.env.ATTESTOR_PK;
-const CHAIN_ID = parseInt(process.env.CHAIN_ID || "31337");
-const ELIGIBILITY_TLS_ADDRESS = process.env.ELIGIBILITY_TLS_ADDRESS;
-const PORT = parseInt(process.env.PORT || "3001");
-const HOST = process.env.HOST || "0.0.0.0";
-
-// Validate required environment variables
-if (!ATTESTOR_PK) {
-  console.error("❌ ATTESTOR_PK environment variable is required");
-  process.exit(1);
-}
-
-if (!ELIGIBILITY_TLS_ADDRESS) {
-  console.error("❌ ELIGIBILITY_TLS_ADDRESS environment variable is required");
-  process.exit(1);
-}
-
-// Initialize wallet
-const wallet = new ethers.Wallet(ATTESTOR_PK);
-console.log("🔑 Attestor wallet initialized:", wallet.address);
-
-// Initialize Fastify
-const fastify = Fastify({
+const app = Fastify({
   logger: {
-    level: process.env.LOG_LEVEL || "info",
-  },
+    level: 'info'
+  }
 });
 
-// Register CORS
-fastify.register(cors, {
+// Configuration
+const PORT = parseInt(process.env.PORT || '3001');
+const HOST = process.env.HOST || '0.0.0.0';
+const ATTESTOR_PK = process.env.ATTESTOR_PK;
+const CHAIN_ID = parseInt(process.env.CHAIN_ID || '31337');
+const ELIGIBILITY_TLS_ADDRESS = process.env.ELIGIBILITY_TLS_ADDRESS || ethers.ZeroAddress;
+
+if (!ATTESTOR_PK) {
+  console.error('❌ ATTESTOR_PK environment variable is required');
+  process.exit(1);
+}
+
+// Initialize services
+const attestorSigner = new AttestorSigner(ATTESTOR_PK);
+const tlsnVerifier = new TLSNotaryVerifier();
+
+// CORS configuration
+app.register(require('@fastify/cors'), {
   origin: true,
-  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
 });
 
 // Health check endpoint
-fastify.get("/health", async (request, reply) => {
+app.get('/health', async (request, reply) => {
   return {
-    status: "healthy",
+    status: 'healthy',
     timestamp: new Date().toISOString(),
-    attestor: wallet.address,
+    attestor: attestorSigner.getAddress(),
     chainId: CHAIN_ID,
-    eligibilityTLS: ELIGIBILITY_TLS_ADDRESS,
+    eligibilityContract: ELIGIBILITY_TLS_ADDRESS
   };
 });
 
 // Attestation endpoint
-fastify.post("/attest", async (request, reply) => {
+app.post('/attest', async (request, reply) => {
   try {
-    const { wallet: userWallet, policyId, tlsn_proof } = request.body as {
+    const { wallet, policyId, tlsn_proof } = request.body as {
       wallet: string;
       policyId: number;
-      tlsn_proof: TLSNProof;
+      tlsn_proof: TLSNotaryProof;
     };
 
     // Validate input
-    if (!userWallet || !policyId || !tlsn_proof) {
+    if (!wallet || !policyId || !tlsn_proof) {
       return reply.status(400).send({
-        error: "Missing required fields: wallet, policyId, tlsn_proof",
+        error: 'Missing required fields: wallet, policyId, tlsn_proof'
       });
     }
 
     // Validate wallet address
-    if (!ethers.isAddress(userWallet)) {
+    if (!ethers.isAddress(wallet)) {
       return reply.status(400).send({
-        error: "Invalid wallet address",
+        error: 'Invalid wallet address'
       });
     }
 
-    // Validate TLSN proof
-    if (!validateTLSNProof(tlsn_proof)) {
+    // Verify TLS Notary proof (stub implementation)
+    const verificationResult = await tlsnVerifier.verifyTLSNotaryProof(tlsn_proof);
+    
+    if (!verificationResult.ageOK || !verificationResult.incomeOK || !verificationResult.cleanOK) {
       return reply.status(400).send({
-        error: "Invalid TLSN proof structure",
-      });
-    }
-
-    console.log("📝 Processing attestation request:", {
-      wallet: userWallet,
-      policyId,
-      hasTLSNProof: !!tlsn_proof,
-    });
-
-    // Verify TLSN proof (stub implementation)
-    const verificationResult = verifyTLSNProof(tlsn_proof);
-
-    // Check if all verifications passed
-    if (!allChecksPassed(calculatePassBitmask(
-      verificationResult.agePassed,
-      verificationResult.incomePassed,
-      verificationResult.cleanRecordPassed
-    ))) {
-      return reply.status(400).send({
-        error: "Verification failed",
-        details: verificationResult.details,
+        error: 'TLS Notary verification failed',
+        details: verificationResult.details
       });
     }
 
     // Generate nonce and nullifier
-    const nonce = ethers.hexlify(ethers.randomBytes(32));
-    const nullifier = generateNullifier(userWallet, policyId, nonce);
-
-    // Calculate expiry (1 hour from now)
-    const expiry = Math.floor(Date.now() / 1000) + 3600;
-
-    // Calculate pass bitmask
-    const passBitmask = calculatePassBitmask(
-      verificationResult.agePassed,
-      verificationResult.incomePassed,
-      verificationResult.cleanRecordPassed
+    const nonce = ethers.randomBytes(32);
+    const nullifier = ethers.keccak256(
+      ethers.AbiCoder.defaultAbiCoder().encode(
+        ['address', 'uint256', 'bytes32'],
+        [wallet, policyId, nonce]
+      )
     );
 
-    // Create attestation
+    // Build pass bitmask (0b111 = all checks passed)
+    const passBitmask = 0x07; // 0b111
+
+    // Set expiry to 1 hour from now
+    const expiry = Math.floor(Date.now() / 1000) + 3600;
+
+    // Construct attestation
     const attestation: Attestation = {
-      wallet: userWallet,
+      wallet,
       policyId,
       expiry,
       nullifier,
-      passBitmask,
+      passBitmask
     };
 
-    // Sign attestation
-    const response = await signAttestation(
-      attestation,
-      wallet,
-      CHAIN_ID,
-      ELIGIBILITY_TLS_ADDRESS
-    );
+    // Create EIP-712 domain
+    const domain = createEIP712Domain(CHAIN_ID, ELIGIBILITY_TLS_ADDRESS);
 
-    console.log("✅ Attestation created successfully:", {
-      wallet: userWallet,
+    // Sign the attestation
+    const signature = await attestorSigner.signAttestation(attestation, domain);
+
+    app.log.info({
+      wallet,
       policyId,
       nullifier,
-      passBitmask: `0x${passBitmask.toString(16)}`,
-      expiry: new Date(expiry * 1000).toISOString(),
-    });
+      passBitmask,
+      expiry,
+      attestor: attestorSigner.getAddress()
+    }, 'Attestation created and signed');
 
-    return reply.send({
-      success: true,
-      attestation: response.attestation,
-      signature: response.signature,
-      domain: response.domain,
-      verification: verificationResult.details,
-    });
+    return {
+      attestation,
+      signature,
+      verification: verificationResult.details
+    };
 
   } catch (error) {
-    console.error("❌ Attestation error:", error);
+    app.log.error(error, 'Error processing attestation request');
     return reply.status(500).send({
-      error: "Internal server error",
-      message: error instanceof Error ? error.message : "Unknown error",
+      error: 'Internal server error',
+      message: error instanceof Error ? error.message : 'Unknown error'
     });
   }
 });
 
-// Get attestor info endpoint
-fastify.get("/info", async (request, reply) => {
+// Sample data endpoint for testing
+app.get('/samples', async (request, reply) => {
+  const samples = {
+    bank: tlsnVerifier.generateSampleProof('bank'),
+    id: tlsnVerifier.generateSampleProof('id'),
+    pass: tlsnVerifier.generateSampleProof('pass')
+  };
+
   return {
-    attestor: wallet.address,
+    samples,
+    attestor: attestorSigner.getAddress(),
     chainId: CHAIN_ID,
-    eligibilityTLS: ELIGIBILITY_TLS_ADDRESS,
-    domain: {
-      name: "ZKPRent-TLS",
-      version: "1",
-      chainId: CHAIN_ID,
-      verifyingContract: ELIGIBILITY_TLS_ADDRESS,
-    },
+    eligibilityContract: ELIGIBILITY_TLS_ADDRESS
   };
 });
 
 // Start server
 const start = async () => {
   try {
-    await fastify.listen({ port: PORT, host: HOST });
-    console.log("🚀 Attestor service started successfully!");
-    console.log(`   URL: http://${HOST}:${PORT}`);
-    console.log(`   Health: http://${HOST}:${PORT}/health`);
-    console.log(`   Info: http://${HOST}:${PORT}/info`);
-    console.log(`   Attest: POST http://${HOST}:${PORT}/attest`);
-    console.log(`   Attestor: ${wallet.address}`);
-    console.log(`   Chain ID: ${CHAIN_ID}`);
-    console.log(`   Eligibility TLS: ${ELIGIBILITY_TLS_ADDRESS}`);
+    await app.listen({ port: PORT, host: HOST });
+    console.log(`🚀 Attestor service running on http://${HOST}:${PORT}`);
+    console.log(`📋 Attestor address: ${attestorSigner.getAddress()}`);
+    console.log(`⛓️  Chain ID: ${CHAIN_ID}`);
+    console.log(`📄 Eligibility contract: ${ELIGIBILITY_TLS_ADDRESS}`);
+    console.log(`🔗 Health check: http://${HOST}:${PORT}/health`);
+    console.log(`📊 Sample data: http://${HOST}:${PORT}/samples`);
   } catch (err) {
-    fastify.log.error(err);
+    app.log.error(err);
     process.exit(1);
   }
 };
-
-// Handle graceful shutdown
-process.on("SIGINT", async () => {
-  console.log("\n🛑 Shutting down attestor service...");
-  await fastify.close();
-  process.exit(0);
-});
-
-process.on("SIGTERM", async () => {
-  console.log("\n🛑 Shutting down attestor service...");
-  await fastify.close();
-  process.exit(0);
-});
 
 start();
