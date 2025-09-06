@@ -1,0 +1,13 @@
+{
+  "age": 30,
+  "income": 95000,
+  "cleanRecord": true,
+  "timestamp": 1694000000000,
+  "source": "government-id",
+  "documentType": "drivers-license",
+  "issuedBy": "California DMV",
+  "documentNumber": "D1234567",
+  "expiryDate": "2028-12-31",
+  "verificationMethod": "tls-notary",
+  "proofHash": "0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890"
+}

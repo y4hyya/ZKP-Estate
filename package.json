@@ -2,7 +2,6 @@
   "name": "zkp-estate",
   "version": "1.0.0",
   "description": "Zero-Knowledge Rent Protocol MVP using Noir ZK",
-  "type": "module",
   "main": "index.js",
   "scripts": {
     "dev:node": "hardhat node",
@@ -35,6 +34,9 @@
     "wizard": "tsx scripts/input-wizard.ts",
     "test:flow": "hardhat run scripts/testFlow.cjs --network localhost",
     "test:flow:stub": "USE_STUB=1 hardhat run scripts/testFlow.cjs --network localhost",
+    "tls:request": "ts-node scripts/requestAttestation.ts --policy 1",
+    "tls:submit": "ts-node scripts/submitTLS.ts --policy 1",
+    "demo:tls": "npm run dev:deploy:tls && npx ts-node --project scripts/tsconfig.json scripts/requestAttestation.ts --policy 1 --attestor http://localhost:3001 --fixtures fixtures/tlsn/sample_bank.json && npx ts-node --project scripts/tsconfig.json scripts/submitTLS.ts --policy 1 && npx hardhat run scripts/startLease.cjs --network localhost --policy 1 --value 180000000000000000 && npx hardhat run scripts/ownerConfirm.cjs --network localhost --policy 1",
     "frontend": "cd frontend/tenant-app && npm run dev",
     "frontend:build": "cd frontend/tenant-app && npm run build",
     "typechain": "hardhat typechain",
@@ -81,6 +83,8 @@
   },
   "dependencies": {
     "@openzeppelin/contracts": "^5.4.0",
+    "axios": "^1.6.0",
+    "commander": "^11.1.0",
     "dotenv": "^16.0.0",
     "viem": "^1.19.0"
   },

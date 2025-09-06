@@ -1,0 +1,14 @@
+{
+  "age": 28,
+  "income": 120000,
+  "cleanRecord": true,
+  "timestamp": 1694000000000,
+  "source": "bank-statement",
+  "accountType": "checking",
+  "balance": 50000,
+  "institution": "Chase Bank",
+  "accountNumber": "****1234",
+  "statementPeriod": "2023-09-01 to 2023-09-30",
+  "verificationMethod": "tls-notary",
+  "proofHash": "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef"
+}
