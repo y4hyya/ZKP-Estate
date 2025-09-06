@@ -15,7 +15,7 @@ async function main() {
   const LeaseEscrow = await ethers.getContractFactory("LeaseEscrow");
   
   let Verifier;
-  let verifierAddress: string;
+  let verifierAddress;
   
   if (useStub) {
     // Use VerifierStub for development/testing
@@ -75,10 +75,14 @@ async function main() {
   await samplePolicyTx.wait();
   console.log("✅ Sample policy created (Policy ID: 1)");
 
+  // Get network info
+  const network = await ethers.provider.getNetwork();
+  const networkName = network.name === "unknown" ? "localhost" : network.name;
+
   // Save deployment info
   const deploymentInfo = {
-    network: (await ethers.provider.getNetwork()).name,
-    chainId: (await ethers.provider.getNetwork()).chainId,
+    network: networkName,
+    chainId: Number(network.chainId),
     contracts: {
       PolicyRegistry: {
         address: policyRegistryAddress,
@@ -109,11 +113,31 @@ async function main() {
   }
 
   // Save deployment info to file
-  const networkName = (await ethers.provider.getNetwork()).name;
   const deploymentFile = path.join(deploymentsDir, `${networkName}.json`);
   fs.writeFileSync(deploymentFile, JSON.stringify(deploymentInfo, null, 2));
 
   console.log("\n📄 Deployment info saved to:", deploymentFile);
+
+  // Create light version for frontend
+  const frontendContracts = {
+    PolicyRegistry: policyRegistryAddress,
+    EligibilityGate: eligibilityGateAddress,
+    LeaseEscrow: leaseEscrowAddress,
+    Verifier: verifierAddress,
+    network: networkName,
+    chainId: Number(network.chainId),
+  };
+
+  // Create frontend contracts directory
+  const frontendContractsDir = path.join(__dirname, "..", "frontend", "tenant-app", "src");
+  if (!fs.existsSync(frontendContractsDir)) {
+    fs.mkdirSync(frontendContractsDir, { recursive: true });
+  }
+
+  const frontendContractsFile = path.join(frontendContractsDir, "contracts.json");
+  fs.writeFileSync(frontendContractsFile, JSON.stringify(frontendContracts, null, 2));
+
+  console.log("📄 Frontend contracts saved to:", frontendContractsFile);
 
   // Verify deployment
   console.log("\n🔍 Verifying deployment...");
