@@ -2,10 +2,10 @@ import { ethers } from 'ethers';
 
 // Contract addresses (in production, these would come from environment variables)
 const CONTRACT_ADDRESSES = {
-  PolicyRegistry: '0x5FbDB2315678afecb367f032d93F642f64180aa3',
-  EligibilityGate: '0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0',
-  LeaseEscrow: '0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9',
-  VerifierStub: '0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512',
+  PolicyRegistry: process.env.VITE_POLICY_REGISTRY_ADDRESS || '0x5FbDB2315678afecb367f032d93F642f64180aa3',
+  EligibilityGate: process.env.VITE_ELIGIBILITY_GATE_ADDRESS || '0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0',
+  LeaseEscrow: process.env.VITE_LEASE_ESCROW_ADDRESS || '0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9',
+  Verifier: process.env.VITE_VERIFIER_ADDRESS || '0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512',
 };
 
 // Mock ABI for testing (in production, these would be imported from artifacts)
