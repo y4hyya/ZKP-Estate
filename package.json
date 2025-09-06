@@ -26,6 +26,7 @@
     "scripts:startLease": "hardhat run scripts/startLease.ts",
     "scripts:confirm": "hardhat run scripts/confirm.ts",
     "scripts:refund": "hardhat run scripts/refund.ts",
+    "wizard": "tsx scripts/input-wizard.ts",
     "typechain": "hardhat typechain",
     "coverage": "hardhat coverage",
     "clean": "hardhat clean && rm -rf artifacts typechain-types"
@@ -64,6 +65,7 @@
     "prettier": "^3.0.0",
     "solidity-coverage": "^0.8.0",
     "ts-node": "^10.0.0",
+    "tsx": "^4.20.5",
     "typechain": "^8.3.0",
     "typescript": "^5.0.0"
   },
