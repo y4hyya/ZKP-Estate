@@ -5,56 +5,88 @@ const path = require("path");
 async function main() {
   console.log("🚀 Deploying ZKP-Estate contracts...");
   
-  // Check if we should use stub verifier
+  // Check gate mode (TLS or NOIR)
+  const gateMode = process.env.GATE_MODE || "TLS";
   const useStub = process.env.USE_STUB === "1";
+  console.log(`📋 Gate Mode: ${gateMode}`);
   console.log(`📋 Using ${useStub ? "VerifierStub" : "EligibilityVerifier"}`);
 
   // Get contract factories
   const PolicyRegistry = await ethers.getContractFactory("PolicyRegistry");
-  const EligibilityGate = await ethers.getContractFactory("EligibilityGate");
   const LeaseEscrow = await ethers.getContractFactory("LeaseEscrow");
   
-  let Verifier;
-  let verifierAddress;
-  
-  if (useStub) {
-    // Use VerifierStub for development/testing
-    Verifier = await ethers.getContractFactory("VerifierStub");
-    const verifierStub = await Verifier.deploy();
-    await verifierStub.waitForDeployment();
-    verifierAddress = await verifierStub.getAddress();
-    console.log("✅ VerifierStub deployed to:", verifierAddress);
-  } else {
-    // Use real EligibilityVerifier
-    try {
-      Verifier = await ethers.getContractFactory("EligibilityVerifier");
-      const eligibilityVerifier = await Verifier.deploy();
-      await eligibilityVerifier.waitForDeployment();
-      verifierAddress = await eligibilityVerifier.getAddress();
-      console.log("✅ EligibilityVerifier deployed to:", verifierAddress);
-    } catch (error) {
-      console.warn("⚠️  EligibilityVerifier not found, falling back to VerifierStub");
-      Verifier = await ethers.getContractFactory("VerifierStub");
-      const verifierStub = await Verifier.deploy();
-      await verifierStub.waitForDeployment();
-      verifierAddress = await verifierStub.getAddress();
-      console.log("✅ VerifierStub deployed to:", verifierAddress);
-    }
-  }
-
-  // Deploy PolicyRegistry
+  // Deploy PolicyRegistry first (needed for EligibilityGate)
   console.log("\n📋 Deploying PolicyRegistry...");
   const policyRegistry = await PolicyRegistry.deploy();
   await policyRegistry.waitForDeployment();
   const policyRegistryAddress = await policyRegistry.getAddress();
   console.log("✅ PolicyRegistry deployed to:", policyRegistryAddress);
 
-  // Deploy EligibilityGate
-  console.log("\n🔐 Deploying EligibilityGate...");
-  const eligibilityGate = await EligibilityGate.deploy(policyRegistryAddress, verifierAddress);
-  await eligibilityGate.waitForDeployment();
-  const eligibilityGateAddress = await eligibilityGate.getAddress();
-  console.log("✅ EligibilityGate deployed to:", eligibilityGateAddress);
+  let eligibilityGateAddress;
+  let verifierAddress = null;
+  let attestorAddress = null;
+  let gateType;
+
+  if (gateMode === "TLS") {
+    // Deploy TLS-based eligibility gate
+    console.log("\n🔐 Deploying EligibilityGateTLS...");
+    
+    // Get attestor address from environment
+    attestorAddress = process.env.ATTESTOR_ADDRESS;
+    if (!attestorAddress) {
+      // Use second account as default attestor
+      const [owner, attestor] = await ethers.getSigners();
+      attestorAddress = await attestor.getAddress();
+      console.log(`⚠️  ATTESTOR_ADDRESS not set, using default: ${attestorAddress}`);
+    }
+    
+    const EligibilityGateTLS = await ethers.getContractFactory("EligibilityGateTLS");
+    const [owner] = await ethers.getSigners();
+    const eligibilityGateTLS = await EligibilityGateTLS.deploy(attestorAddress, await owner.getAddress());
+    await eligibilityGateTLS.waitForDeployment();
+    eligibilityGateAddress = await eligibilityGateTLS.getAddress();
+    gateType = "EligibilityGateTLS";
+    console.log("✅ EligibilityGateTLS deployed to:", eligibilityGateAddress);
+    console.log("✅ Attestor address:", attestorAddress);
+    
+  } else {
+    // Deploy Noir-based eligibility gate
+    console.log("\n🔐 Deploying EligibilityGate (Noir)...");
+    
+    let Verifier;
+    
+    if (useStub) {
+      // Use VerifierStub for development/testing
+      Verifier = await ethers.getContractFactory("VerifierStub");
+      const verifierStub = await Verifier.deploy();
+      await verifierStub.waitForDeployment();
+      verifierAddress = await verifierStub.getAddress();
+      console.log("✅ VerifierStub deployed to:", verifierAddress);
+    } else {
+      // Use real EligibilityVerifier
+      try {
+        Verifier = await ethers.getContractFactory("EligibilityVerifier");
+        const eligibilityVerifier = await Verifier.deploy();
+        await eligibilityVerifier.waitForDeployment();
+        verifierAddress = await eligibilityVerifier.getAddress();
+        console.log("✅ EligibilityVerifier deployed to:", verifierAddress);
+      } catch (error) {
+        console.warn("⚠️  EligibilityVerifier not found, falling back to VerifierStub");
+        Verifier = await ethers.getContractFactory("VerifierStub");
+        const verifierStub = await Verifier.deploy();
+        await verifierStub.waitForDeployment();
+        verifierAddress = await verifierStub.getAddress();
+        console.log("✅ VerifierStub deployed to:", verifierAddress);
+      }
+    }
+    
+    const EligibilityGate = await ethers.getContractFactory("EligibilityGate");
+    const eligibilityGate = await EligibilityGate.deploy(policyRegistryAddress, verifierAddress);
+    await eligibilityGate.waitForDeployment();
+    eligibilityGateAddress = await eligibilityGate.getAddress();
+    gateType = "EligibilityGate";
+    console.log("✅ EligibilityGate deployed to:", eligibilityGateAddress);
+  }
 
   // Deploy LeaseEscrow
   console.log("\n💰 Deploying LeaseEscrow...");
@@ -83,6 +115,8 @@ async function main() {
   const deploymentInfo = {
     network: networkName,
     chainId: Number(network.chainId),
+    gateMode: gateMode,
+    gateType: gateType,
     contracts: {
       PolicyRegistry: {
         address: policyRegistryAddress,
@@ -90,21 +124,33 @@ async function main() {
       },
       EligibilityGate: {
         address: eligibilityGateAddress,
-        transactionHash: eligibilityGate.deploymentTransaction()?.hash,
+        type: gateType,
+        transactionHash: gateMode === "TLS" 
+          ? (await ethers.getContractAt("EligibilityGateTLS", eligibilityGateAddress)).deploymentTransaction()?.hash
+          : (await ethers.getContractAt("EligibilityGate", eligibilityGateAddress)).deploymentTransaction()?.hash,
       },
       LeaseEscrow: {
         address: leaseEscrowAddress,
         transactionHash: leaseEscrow.deploymentTransaction()?.hash,
       },
-      Verifier: {
-        address: verifierAddress,
-        type: useStub ? "VerifierStub" : "EligibilityVerifier",
-        transactionHash: (await ethers.getContractAt("VerifierStub", verifierAddress)).deploymentTransaction()?.hash,
-      },
     },
     timestamp: new Date().toISOString(),
     useStub: useStub,
   };
+
+  // Add verifier info only for Noir mode
+  if (gateMode === "NOIR" && verifierAddress) {
+    deploymentInfo.contracts.Verifier = {
+      address: verifierAddress,
+      type: useStub ? "VerifierStub" : "EligibilityVerifier",
+      transactionHash: (await ethers.getContractAt("VerifierStub", verifierAddress)).deploymentTransaction()?.hash,
+    };
+  }
+
+  // Add attestor info only for TLS mode
+  if (gateMode === "TLS" && attestorAddress) {
+    deploymentInfo.attestor = attestorAddress;
+  }
 
   // Create deployments directory if it doesn't exist
   const deploymentsDir = path.join(__dirname, "..", "deployments");
@@ -123,10 +169,21 @@ async function main() {
     PolicyRegistry: policyRegistryAddress,
     EligibilityGate: eligibilityGateAddress,
     LeaseEscrow: leaseEscrowAddress,
-    Verifier: verifierAddress,
     network: networkName,
     chainId: Number(network.chainId),
+    gateMode: gateMode,
+    gateType: gateType,
   };
+
+  // Add verifier info only for Noir mode
+  if (gateMode === "NOIR" && verifierAddress) {
+    frontendContracts.Verifier = verifierAddress;
+  }
+
+  // Add attestor info only for TLS mode
+  if (gateMode === "TLS" && attestorAddress) {
+    frontendContracts.attestor = attestorAddress;
+  }
 
   // Create frontend contracts directory
   const frontendContractsDir = path.join(__dirname, "..", "frontend", "tenant-app", "src");
@@ -146,10 +203,17 @@ async function main() {
   const policyCount = await policyRegistry.getPolicyCount();
   console.log(`✅ PolicyRegistry: ${policyCount} policies created`);
   
-  // Test EligibilityGate
-  const gatePolicyRegistry = await eligibilityGate.getPolicyRegistry();
-  const gateVerifier = await eligibilityGate.getVerifier();
-  console.log(`✅ EligibilityGate: PolicyRegistry=${gatePolicyRegistry}, Verifier=${gateVerifier}`);
+  // Test EligibilityGate based on mode
+  if (gateMode === "TLS") {
+    const tlsGate = await ethers.getContractAt("EligibilityGateTLS", eligibilityGateAddress);
+    const tlsAttestor = await tlsGate.attestor();
+    console.log(`✅ EligibilityGateTLS: Attestor=${tlsAttestor}`);
+  } else {
+    const noirGate = await ethers.getContractAt("EligibilityGate", eligibilityGateAddress);
+    const gatePolicyRegistry = await noirGate.getPolicyRegistry();
+    const gateVerifier = await noirGate.getVerifier();
+    console.log(`✅ EligibilityGate: PolicyRegistry=${gatePolicyRegistry}, Verifier=${gateVerifier}`);
+  }
   
   // Test LeaseEscrow
   const escrowPolicyRegistry = await leaseEscrow.getPolicyRegistry();
@@ -159,15 +223,26 @@ async function main() {
   console.log("\n🎉 Deployment completed successfully!");
   console.log("\n📋 Contract Addresses:");
   console.log(`   PolicyRegistry: ${policyRegistryAddress}`);
-  console.log(`   EligibilityGate: ${eligibilityGateAddress}`);
+  console.log(`   EligibilityGate: ${eligibilityGateAddress} (${gateType})`);
   console.log(`   LeaseEscrow: ${leaseEscrowAddress}`);
-  console.log(`   Verifier: ${verifierAddress} (${useStub ? "Stub" : "Real"})`);
+  
+  if (gateMode === "TLS") {
+    console.log(`   Attestor: ${attestorAddress}`);
+  } else if (verifierAddress) {
+    console.log(`   Verifier: ${verifierAddress} (${useStub ? "Stub" : "Real"})`);
+  }
   
   console.log("\n🔧 Environment Variables for Frontend:");
   console.log(`   VITE_POLICY_REGISTRY_ADDRESS=${policyRegistryAddress}`);
   console.log(`   VITE_ELIGIBILITY_GATE_ADDRESS=${eligibilityGateAddress}`);
   console.log(`   VITE_LEASE_ESCROW_ADDRESS=${leaseEscrowAddress}`);
-  console.log(`   VITE_VERIFIER_ADDRESS=${verifierAddress}`);
+  console.log(`   VITE_GATE_MODE=${gateMode}`);
+  
+  if (gateMode === "TLS") {
+    console.log(`   VITE_ATTESTOR_ADDRESS=${attestorAddress}`);
+  } else if (verifierAddress) {
+    console.log(`   VITE_VERIFIER_ADDRESS=${verifierAddress}`);
+  }
 }
 
 main()
