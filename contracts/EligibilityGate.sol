@@ -65,7 +65,7 @@ contract EligibilityGate {
         // Verify public inputs match policy
         require(publicInputs[0] == policy.minAge, "EligibilityGate: minAge mismatch");
         require(publicInputs[1] == policy.incomeMul, "EligibilityGate: incomeMul mismatch");
-        require(publicInputs[2] == policy.rentWei, "EligibilityGate: rentWei mismatch");
+        require(publicInputs[2] == policy.rentWei / 1e15, "EligibilityGate: rentWei mismatch");
         require(publicInputs[3] == (policy.needCleanRec ? 1 : 0), "EligibilityGate: needCleanRec mismatch");
         require(publicInputs[4] == policyId, "EligibilityGate: policyId mismatch");
         
