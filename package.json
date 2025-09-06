@@ -27,6 +27,8 @@
     "scripts:confirm": "hardhat run scripts/confirm.ts",
     "scripts:refund": "hardhat run scripts/refund.ts",
     "wizard": "tsx scripts/input-wizard.ts",
+    "frontend": "cd frontend/tenant-app && npm run dev",
+    "frontend:build": "cd frontend/tenant-app && npm run build",
     "typechain": "hardhat typechain",
     "coverage": "hardhat coverage",
     "clean": "hardhat clean && rm -rf artifacts typechain-types"
