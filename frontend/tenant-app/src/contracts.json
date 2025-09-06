@@ -1,0 +1,8 @@
+{
+  "PolicyRegistry": "0x809d550fca64d94Bd9F66E60752A544199cfAC3D",
+  "EligibilityGate": "0x4c5859f0F772848b2D91F1D83E2Fe57935348029",
+  "LeaseEscrow": "0x1291Be112d480055DaFd8a610b7d1e203891C274",
+  "Verifier": "0x36C02dA8a0983159322a80FFE9F24b1acfF8B570",
+  "network": "localhost",
+  "chainId": 31337
+}
