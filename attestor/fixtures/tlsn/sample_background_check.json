@@ -1,0 +1,14 @@
+{
+  "age": 25,
+  "income": 85000,
+  "cleanRecord": false,
+  "timestamp": 1694000000000,
+  "source": "background-check",
+  "criminalRecord": true,
+  "reason": "minor-traffic-violation",
+  "violationDate": "2022-03-15",
+  "violationType": "speeding",
+  "fineAmount": 150,
+  "verificationMethod": "tls-notary",
+  "proofHash": "0x9876543210fedcba9876543210fedcba9876543210fedcba9876543210fedcba"
+}

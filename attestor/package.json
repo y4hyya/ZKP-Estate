@@ -1,34 +1,30 @@
 {
   "name": "zkp-estate-attestor",
   "version": "1.0.0",
-  "description": "Off-chain attestor microservice for ZKP-Estate TLS verification",
+  "description": "Off-chain attestor service for TLS Notary verification and EIP-712 attestation signing",
   "main": "dist/index.js",
   "scripts": {
-    "dev": "tsx watch src/index.ts",
     "build": "tsc",
+    "dev": "tsx src/index.ts",
     "start": "node dist/index.js",
-    "test": "jest"
+    "clean": "rm -rf dist",
+    "test": "./test-attestor.sh",
+    "integration": "node integration-example.js"
   },
   "dependencies": {
-    "ethers": "^6.15.0",
-    "fastify": "^4.28.1",
+    "ethers": "^6.8.1",
+    "fastify": "^4.24.3",
+    "dotenv": "^16.3.1",
+    "pino-pretty": "^10.2.0",
     "@fastify/cors": "^8.4.0",
-    "dotenv": "^16.4.5"
+    "axios": "^1.6.0"
   },
   "devDependencies": {
-    "@types/node": "^20.11.0",
-    "tsx": "^4.7.0",
-    "typescript": "^5.3.3",
-    "jest": "^29.7.0",
-    "@types/jest": "^29.5.11"
+    "@types/node": "^20.8.0",
+    "tsx": "^3.12.7",
+    "typescript": "^5.2.2"
   },
-  "keywords": [
-    "zkp",
-    "attestor",
-    "tls",
-    "eip712",
-    "ethereum"
-  ],
-  "author": "ZKP-Estate Team",
+  "keywords": ["zkp", "tls-notary", "eip-712", "attestation"],
+  "author": "ZKP-Estate",
   "license": "MIT"
 }

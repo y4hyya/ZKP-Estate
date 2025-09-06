@@ -1,15 +1,14 @@
 {
-  "bank": {
-    "accountNumber": "1234567890",
-    "bankName": "Demo Bank International",
-    "accountHolder": "John Doe",
-    "balance": 75000,
-    "currency": "USD",
-    "verifiedAt": "2025-09-06T20:00:00Z"
-  },
-  "metadata": {
-    "verificationProvider": "bank-verifier-stub",
-    "verificationLevel": "high",
-    "timestamp": "2025-09-06T20:00:00Z"
-  }
+  "age": 28,
+  "income": 120000,
+  "cleanRecord": true,
+  "timestamp": 1694000000000,
+  "source": "bank-statement",
+  "accountType": "checking",
+  "balance": 50000,
+  "institution": "Chase Bank",
+  "accountNumber": "****1234",
+  "statementPeriod": "2023-09-01 to 2023-09-30",
+  "verificationMethod": "tls-notary",
+  "proofHash": "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef"
 }
