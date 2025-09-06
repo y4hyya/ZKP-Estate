@@ -28,6 +28,7 @@
     "scripts:confirm": "hardhat run scripts/ownerConfirm.cjs",
     "scripts:refund": "hardhat run scripts/timeoutRefund.cjs",
     "scripts:e2e": "hardhat run scripts/e2e-test.cjs",
+    "scripts:demo-tls": "hardhat run scripts/demo-tls.cjs",
     "wizard": "tsx scripts/input-wizard.ts",
     "test:flow": "hardhat run scripts/testFlow.cjs --network localhost",
     "test:flow:stub": "USE_STUB=1 hardhat run scripts/testFlow.cjs --network localhost",
