@@ -6,7 +6,8 @@
   "main": "index.js",
   "scripts": {
     "dev:node": "hardhat node",
-    "dev:deploy": "hardhat run scripts/deploy.ts --network localhost",
+    "dev:deploy": "hardhat run scripts/deploy-complete.cjs --network localhost",
+    "dev:deploy:stub": "USE_STUB=1 hardhat run scripts/deploy-complete.cjs --network localhost",
     "build": "hardhat compile",
     "test": "hardhat test && npm run test:circuits",
     "test:unit": "hardhat test test/unit/",
