@@ -15,7 +15,7 @@ async function main() {
   const LeaseEscrow = await ethers.getContractFactory("LeaseEscrow");
   
   let Verifier;
-  let verifierAddress: string;
+  let verifierAddress;
   
   if (useStub) {
     // Use VerifierStub for development/testing
@@ -111,7 +111,8 @@ async function main() {
   // Save deployment info to file
   const networkName = (await ethers.provider.getNetwork()).name;
   const deploymentFile = path.join(deploymentsDir, `${networkName}.json`);
-  fs.writeFileSync(deploymentFile, JSON.stringify(deploymentInfo, null, 2));
+  fs.writeFileSync(deploymentFile, JSON.stringify(deploymentInfo, (key, value) =>
+    typeof value === 'bigint' ? value.toString() : value, 2));
 
   console.log("\n📄 Deployment info saved to:", deploymentFile);
 
