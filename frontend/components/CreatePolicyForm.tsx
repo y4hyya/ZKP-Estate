@@ -3,12 +3,21 @@
 import { useState, useRef } from 'react';
 import { Plus, DollarSign, Shield, Calendar, Image, Upload } from 'lucide-react';
 
+interface ZKRequirements {
+  minAge: number;
+  incomeMultiplier: number;
+  minCreditScore: number;
+  employmentStatus: string[];
+  rentalHistory: string;
+}
+
 interface PropertyData {
   rentAmount: string;
   deposit: string;
   duration: number;
   propertyDetails: string;
   imageUrl?: string;
+  zkRequirements: ZKRequirements;
 }
 
 interface CreatePolicyFormProps {
@@ -22,6 +31,14 @@ export default function CreatePolicyForm({ onPropertyCreated }: CreatePolicyForm
     duration: '',
     propertyDetails: '',
     imageUrl: '',
+  });
+
+  const [zkRequirements, setZkRequirements] = useState<ZKRequirements>({
+    minAge: 18,
+    incomeMultiplier: 3.0,
+    minCreditScore: 600,
+    employmentStatus: ['employed', 'self-employed'],
+    rentalHistory: 'no-negative-history',
   });
   const [isLoading, setIsLoading] = useState(false);
   const [isDragOver, setIsDragOver] = useState(false);
@@ -47,6 +64,7 @@ export default function CreatePolicyForm({ onPropertyCreated }: CreatePolicyForm
           duration: parseInt(formData.duration),
           propertyDetails: formData.propertyDetails,
           imageUrl: formData.imageUrl || undefined,
+          zkRequirements: zkRequirements,
         });
       }
       
@@ -59,6 +77,13 @@ export default function CreatePolicyForm({ onPropertyCreated }: CreatePolicyForm
         duration: '',
         propertyDetails: '',
         imageUrl: '',
+      });
+      setZkRequirements({
+        minAge: 18,
+        incomeMultiplier: 3.0,
+        minCreditScore: 600,
+        employmentStatus: ['employed', 'self-employed'],
+        rentalHistory: 'no-negative-history',
       });
       setUploadedImage(null);
     } catch (error) {
@@ -73,6 +98,22 @@ export default function CreatePolicyForm({ onPropertyCreated }: CreatePolicyForm
     setFormData(prev => ({
       ...prev,
       [e.target.name]: e.target.value,
+    }));
+  };
+
+  const handleZKRequirementChange = (field: keyof ZKRequirements, value: any) => {
+    setZkRequirements(prev => ({
+      ...prev,
+      [field]: value,
+    }));
+  };
+
+  const handleEmploymentStatusChange = (status: string, checked: boolean) => {
+    setZkRequirements(prev => ({
+      ...prev,
+      employmentStatus: checked 
+        ? [...prev.employmentStatus, status]
+        : prev.employmentStatus.filter(s => s !== status),
     }));
   };
 
@@ -293,17 +334,137 @@ export default function CreatePolicyForm({ onPropertyCreated }: CreatePolicyForm
             />
           </div>
 
-          <div className="bg-primary-50 dark:bg-primary-900/20 p-4 rounded-lg">
-            <h4 className="font-medium text-primary-800 dark:text-primary-200 mb-2">
+          <div className="bg-primary-50 dark:bg-primary-900/20 p-6 rounded-lg">
+            <h4 className="font-medium text-primary-800 dark:text-primary-200 mb-4 flex items-center">
+              <Shield className="h-5 w-5 mr-2" />
               ZK Verification Requirements
             </h4>
-            <ul className="text-sm text-primary-700 dark:text-primary-300 space-y-1">
-              <li>• Tenants must prove age ≥ 18 years</li>
-              <li>• Income must be ≥ 3x monthly rent</li>
-              <li>• Credit score must be ≥ 600</li>
-              <li>• Must be employed or self-employed</li>
-              <li>• No negative rental history</li>
-            </ul>
+            
+            <div className="space-y-6">
+              {/* Minimum Age */}
+              <div>
+                <label className="block text-sm font-medium text-primary-700 dark:text-primary-300 mb-2">
+                  Minimum Age (years)
+                </label>
+                <div className="flex items-center space-x-3">
+                  <input
+                    type="number"
+                    value={zkRequirements.minAge}
+                    onChange={(e) => handleZKRequirementChange('minAge', parseInt(e.target.value))}
+                    min="18"
+                    max="100"
+                    className="input w-20"
+                  />
+                  <span className="text-sm text-primary-600 dark:text-primary-400">
+                    years or older
+                  </span>
+                </div>
+              </div>
+
+              {/* Income Multiplier */}
+              <div>
+                <label className="block text-sm font-medium text-primary-700 dark:text-primary-300 mb-2">
+                  Income Requirement (multiplier of monthly rent)
+                </label>
+                <div className="flex items-center space-x-3">
+                  <input
+                    type="number"
+                    value={zkRequirements.incomeMultiplier}
+                    onChange={(e) => handleZKRequirementChange('incomeMultiplier', parseFloat(e.target.value))}
+                    step="0.1"
+                    min="0.1"
+                    max="10"
+                    className="input w-24"
+                  />
+                  <span className="text-sm text-primary-600 dark:text-primary-400">
+                    x monthly rent
+                  </span>
+                </div>
+              </div>
+
+              {/* Credit Score */}
+              <div>
+                <label className="block text-sm font-medium text-primary-700 dark:text-primary-300 mb-2">
+                  Minimum Credit Score
+                </label>
+                <div className="flex items-center space-x-3">
+                  <input
+                    type="number"
+                    value={zkRequirements.minCreditScore}
+                    onChange={(e) => handleZKRequirementChange('minCreditScore', parseInt(e.target.value))}
+                    min="300"
+                    max="850"
+                    className="input w-24"
+                  />
+                  <span className="text-sm text-primary-600 dark:text-primary-400">
+                    or higher
+                  </span>
+                </div>
+              </div>
+
+              {/* Employment Status */}
+              <div>
+                <label className="block text-sm font-medium text-primary-700 dark:text-primary-300 mb-3">
+                  Employment Status (select all that apply)
+                </label>
+                <div className="grid grid-cols-2 gap-3">
+                  {[
+                    { value: 'employed', label: 'Employed' },
+                    { value: 'self-employed', label: 'Self-employed' },
+                    { value: 'retired', label: 'Retired' },
+                    { value: 'student', label: 'Student' },
+                    { value: 'does-not-care', label: 'Does not care' }
+                  ].map((option) => (
+                    <label key={option.value} className="flex items-center space-x-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={zkRequirements.employmentStatus.includes(option.value)}
+                        onChange={(e) => handleEmploymentStatusChange(option.value, e.target.checked)}
+                        className="rounded border-primary-300 text-primary-600 focus:ring-primary-500"
+                      />
+                      <span className="text-sm text-primary-700 dark:text-primary-300">
+                        {option.label}
+                      </span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              {/* Rental History */}
+              <div>
+                <label className="block text-sm font-medium text-primary-700 dark:text-primary-300 mb-3">
+                  Rental History Requirement
+                </label>
+                <div className="space-y-2">
+                  <label className="flex items-center space-x-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="rentalHistory"
+                      value="no-negative-history"
+                      checked={zkRequirements.rentalHistory === 'no-negative-history'}
+                      onChange={(e) => handleZKRequirementChange('rentalHistory', e.target.value)}
+                      className="text-primary-600 focus:ring-primary-500"
+                    />
+                    <span className="text-sm text-primary-700 dark:text-primary-300">
+                      No negative rental history
+                    </span>
+                  </label>
+                  <label className="flex items-center space-x-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="rentalHistory"
+                      value="does-not-matter"
+                      checked={zkRequirements.rentalHistory === 'does-not-matter'}
+                      onChange={(e) => handleZKRequirementChange('rentalHistory', e.target.value)}
+                      className="text-primary-600 focus:ring-primary-500"
+                    />
+                    <span className="text-sm text-primary-700 dark:text-primary-300">
+                      Does not matter
+                    </span>
+                  </label>
+                </div>
+              </div>
+            </div>
           </div>
 
           <div className="flex space-x-4">
@@ -323,6 +484,13 @@ export default function CreatePolicyForm({ onPropertyCreated }: CreatePolicyForm
                   duration: '',
                   propertyDetails: '',
                   imageUrl: '',
+                });
+                setZkRequirements({
+                  minAge: 18,
+                  incomeMultiplier: 3.0,
+                  minCreditScore: 600,
+                  employmentStatus: ['employed', 'self-employed'],
+                  rentalHistory: 'no-negative-history',
                 });
                 setUploadedImage(null);
                 if (fileInputRef.current) {
