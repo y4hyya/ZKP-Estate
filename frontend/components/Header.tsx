@@ -65,8 +65,8 @@ export default function Header() {
               <div>
                 <h3 className="text-lg font-semibold text-secondary-900 dark:text-white mb-2">How it Works</h3>
                 <div className="space-y-2 text-sm text-secondary-600 dark:text-secondary-300">
-                  <p>• <strong>Path A (Noir ZK):</strong> Privacy-first approach using zero-knowledge circuits</p>
-                  <p>• <strong>Path B (TLSNotary):</strong> Faster MVP with HTTPS transcript verification</p>
+                  <p>• <strong>For Tenant:</strong> Browse available properties and submit ZK proofs for eligibility</p>
+                  <p>• <strong>For Landlords:</strong> Create rental policies and manage your leases</p>
                   <p>• <strong>Create Policy:</strong> Set up rental requirements and conditions</p>
                   <p>• <strong>Submit Proof:</strong> Provide eligibility verification</p>
                   <p>• <strong>Start Lease:</strong> Begin secure rental agreement</p>
@@ -79,7 +79,7 @@ export default function Header() {
                 <h3 className="text-lg font-semibold text-secondary-900 dark:text-white mb-2">Documentation</h3>
                 <div className="space-y-2 text-sm text-secondary-600 dark:text-secondary-300">
                   <p>• <strong>Smart Contracts:</strong> Solidity contracts for rental management</p>
-                  <p>• <strong>ZK Circuits:</strong> Noir circuits for eligibility verification</p>
+                  <p>• <strong>ZK Proofs:</strong> Zero-knowledge proofs for privacy-preserving verification</p>
                   <p>• <strong>Attestor Service:</strong> TLSNotary verification service</p>
                   <p>• <strong>API Reference:</strong> Contract interaction methods</p>
                   <p>• <strong>Examples:</strong> Sample implementations and use cases</p>

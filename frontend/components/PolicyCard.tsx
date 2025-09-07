@@ -10,6 +10,7 @@ interface PolicyCardProps {
   deposit: string;
   duration: number;
   propertyDetails: string;
+  imageUrl?: string;
 }
 
 export default function PolicyCard({
@@ -19,6 +20,7 @@ export default function PolicyCard({
   deposit,
   duration,
   propertyDetails,
+  imageUrl,
 }: PolicyCardProps) {
   const [isLoading, setIsLoading] = useState(false);
 
@@ -35,7 +37,22 @@ export default function PolicyCard({
   };
 
   return (
-    <div className="card hover:shadow-xl transition-shadow duration-200">
+    <div className="card hover:shadow-xl transition-shadow duration-200 overflow-hidden">
+      {/* Property Image */}
+      {imageUrl && (
+        <div className="relative h-48 w-full mb-4">
+          <img
+            src={imageUrl}
+            alt={propertyDetails}
+            className="w-full h-full object-cover rounded-t-lg"
+            onError={(e) => {
+              const target = e.target as HTMLImageElement;
+              target.style.display = 'none';
+            }}
+          />
+        </div>
+      )}
+      
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-center space-x-2">
           <Shield className="h-5 w-5 text-primary-600" />
@@ -86,7 +103,7 @@ export default function PolicyCard({
           disabled={isLoading}
           className="flex-1 btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {isLoading ? 'Processing...' : 'Rent with ZK Proof'}
+          {isLoading ? 'Processing...' : 'Proposal with ZK Proof'}
         </button>
         <button className="btn-secondary">
           View Details
