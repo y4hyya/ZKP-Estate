@@ -52,30 +52,47 @@ const POLICY_REGISTRY_ABI = [
 ];
 
 export class ContractService {
-  private provider: ethers.BrowserProvider;
+  private provider: ethers.BrowserProvider | null = null;
   private signer: ethers.JsonRpcSigner | null = null;
-  private eligibilityGate: ethers.Contract;
-  private policyRegistry: ethers.Contract;
+  private eligibilityGate: ethers.Contract | null = null;
+  private policyRegistry: ethers.Contract | null = null;
 
   constructor() {
+    // Don't throw error in constructor - check in methods instead
+    if (typeof window.ethereum !== 'undefined') {
+      this.provider = new ethers.BrowserProvider(window.ethereum);
+      this.eligibilityGate = new ethers.Contract(
+        CONTRACT_ADDRESSES.EligibilityGate,
+        ELIGIBILITY_GATE_ABI,
+        this.provider
+      );
+      this.policyRegistry = new ethers.Contract(
+        CONTRACT_ADDRESSES.PolicyRegistry,
+        POLICY_REGISTRY_ABI,
+        this.provider
+      );
+    }
+  }
+
+  async connectWallet(): Promise<string> {
     if (typeof window.ethereum === 'undefined') {
       throw new Error('MetaMask not installed');
     }
     
-    this.provider = new ethers.BrowserProvider(window.ethereum);
-    this.eligibilityGate = new ethers.Contract(
-      CONTRACT_ADDRESSES.EligibilityGate,
-      ELIGIBILITY_GATE_ABI,
-      this.provider
-    );
-    this.policyRegistry = new ethers.Contract(
-      CONTRACT_ADDRESSES.PolicyRegistry,
-      POLICY_REGISTRY_ABI,
-      this.provider
-    );
-  }
-
-  async connectWallet(): Promise<string> {
+    if (!this.provider) {
+      this.provider = new ethers.BrowserProvider(window.ethereum);
+      this.eligibilityGate = new ethers.Contract(
+        CONTRACT_ADDRESSES.EligibilityGate,
+        ELIGIBILITY_GATE_ABI,
+        this.provider
+      );
+      this.policyRegistry = new ethers.Contract(
+        CONTRACT_ADDRESSES.PolicyRegistry,
+        POLICY_REGISTRY_ABI,
+        this.provider
+      );
+    }
+    
     try {
       const accounts = await this.provider.request({ method: 'eth_requestAccounts' });
       this.signer = await this.provider.getSigner();
@@ -91,6 +108,10 @@ export class ContractService {
   }
 
   async getPolicy(policyId: number) {
+    if (!this.policyRegistry) {
+      throw new Error('Contract service not initialized');
+    }
+    
     try {
       const policy = await this.policyRegistry.getPolicy(policyId);
       return {
@@ -111,6 +132,10 @@ export class ContractService {
     if (!this.signer) {
       throw new Error('Wallet not connected');
     }
+    
+    if (!this.eligibilityGate) {
+      throw new Error('Contract service not initialized');
+    }
 
     try {
       // Convert proof from hex string to bytes
@@ -129,6 +154,10 @@ export class ContractService {
   }
 
   async checkEligibility(address: string, policyId: number): Promise<boolean> {
+    if (!this.eligibilityGate) {
+      throw new Error('Contract service not initialized');
+    }
+    
     try {
       return await this.eligibilityGate.isEligible(address, policyId);
     } catch (error) {

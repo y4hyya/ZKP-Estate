@@ -9,14 +9,5 @@ export default defineConfig({
   },
   esbuild: {
     jsxInject: `import React from 'react'`
-  },
-  define: {
-    global: 'globalThis',
-  },
-  optimizeDeps: {
-    include: ['react', 'react-dom'],
-  },
-  resolve: {
-    dedupe: ['react', 'react-dom'],
-  },
+  }
 })
