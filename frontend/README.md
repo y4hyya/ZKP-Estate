@@ -7,7 +7,7 @@ A Next.js frontend for the ZKP-Estate zero-knowledge rental protocol.
 - **Wallet Integration**: Connect with MetaMask and other wallets using RainbowKit
 - **Policy Management**: Create and browse rental policies
 - **Lease Management**: Start, track, and confirm rental leases
-- **ZK Proof Integration**: Generate and submit zero-knowledge proofs for eligibility
+- **TLSNotary Integration**: Generate and submit TLSNotary proofs for eligibility
 - **Responsive Design**: Mobile-first design with Tailwind CSS
 
 ## Getting Started

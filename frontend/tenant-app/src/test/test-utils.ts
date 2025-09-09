@@ -45,31 +45,17 @@ export const generateSalt = (): string => {
   return BigInt('0x' + hex).toString();
 };
 
-export const computeNullifier = (userId: string, policyId: number, salt: string): string => {
-  const userIdBigInt = BigInt(userId);
-  const policyIdBigInt = BigInt(policyId);
-  const saltBigInt = BigInt(salt);
-  
-  const fieldModulus = BigInt("21888242871839275222246405745257275088548364400416034343698204186575808495617");
-  return ((userIdBigInt + policyIdBigInt + saltBigInt) % fieldModulus).toString();
-};
-
-// Test proof generation
-export const generateTestProof = (formData: any, policyData: any, walletAddress: string) => {
-  const incomeWei = Math.floor(formData.monthlyIncome * 1000);
-  const userId = addressToBigInt(walletAddress);
-  const salt = generateSalt();
-  const nullifier = computeNullifier(userId, formData.policyId, salt);
-
+// Test TLSNotary proof generation
+export const generateTestTLSNotaryProof = (formData: any, policyData: any, walletAddress: string) => {
   return {
-    proof: "0x" + "0".repeat(128),
-    publicInputs: [
-      policyData.minAge.toString(),
-      policyData.incomeMul.toString(),
-      policyData.rentWei.toString(),
-      policyData.needCleanRec ? "1" : "0",
-      formData.policyId.toString(),
-      nullifier
-    ]
+    proof: "0x" + "0".repeat(128), // Mock TLSNotary proof
+    attestation: {
+      age: formData.age,
+      income: formData.monthlyIncome,
+      cleanRecord: !formData.criminalRecord,
+      timestamp: Date.now(),
+      walletAddress: walletAddress,
+      policyId: formData.policyId
+    }
   };
 };

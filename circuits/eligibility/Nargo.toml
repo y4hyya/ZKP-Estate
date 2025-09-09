@@ -1,5 +1,0 @@
-[package]
-name = "eligibility"
-type = "bin"
-authors = ["ZKP-Estate Team"]
-compiler_version = ">=0.18.0"

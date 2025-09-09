@@ -4,7 +4,6 @@ import { useState } from 'react';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { useAccount } from 'wagmi';
 import Header from '@/components/Header';
-import NoirTab from '@/components/NoirTab';
 import TLSTab from '@/components/TLSTab';
 
 export default function Home() {
@@ -55,7 +54,7 @@ export default function Home() {
             </div>
 
             {/* Tab Content */}
-            {pathTab === 'tenant' && <NoirTab />}
+            {pathTab === 'tenant' && <TLSTab />}
             {pathTab === 'landlord' && <TLSTab />}
           </>
         )}

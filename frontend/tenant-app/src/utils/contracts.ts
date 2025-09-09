@@ -12,17 +12,6 @@ const CONTRACT_ADDRESSES = {
 const ELIGIBILITY_GATE_ABI = [
   {
     "inputs": [
-      {"internalType": "uint256", "name": "policyId", "type": "uint256"},
-      {"internalType": "bytes", "name": "proof", "type": "bytes"},
-      {"internalType": "uint256[]", "name": "publicInputs", "type": "uint256[]"}
-    ],
-    "name": "submitZk",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
       {"internalType": "address", "name": "who", "type": "address"},
       {"internalType": "uint256", "name": "policyId", "type": "uint256"}
     ],
@@ -128,30 +117,6 @@ export class ContractService {
     }
   }
 
-  async submitZkProof(policyId: number, proof: string, publicInputs: string[]): Promise<string> {
-    if (!this.signer) {
-      throw new Error('Wallet not connected');
-    }
-    
-    if (!this.eligibilityGate) {
-      throw new Error('Contract service not initialized');
-    }
-
-    try {
-      // Convert proof from hex string to bytes
-      const proofBytes = ethers.getBytes(proof);
-      
-      // Convert public inputs to BigInt array
-      const publicInputsBigInt = publicInputs.map(input => BigInt(input));
-      
-      const tx = await this.eligibilityGate.submitZk(policyId, proofBytes, publicInputsBigInt);
-      const receipt = await tx.wait();
-      
-      return receipt.hash;
-    } catch (error) {
-      throw new Error('Failed to submit proof to contract');
-    }
-  }
 
   async checkEligibility(address: string, policyId: number): Promise<boolean> {
     if (!this.eligibilityGate) {
