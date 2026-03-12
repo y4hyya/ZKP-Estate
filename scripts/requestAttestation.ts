@@ -103,7 +103,7 @@ async function main() {
       const deploymentsPath = `deployments/${options.network}.json`;
       if (fs.existsSync(deploymentsPath)) {
         const deployments = JSON.parse(fs.readFileSync(deploymentsPath, 'utf8'));
-        gateAddress = deployments.contracts.EligibilityGate.address;
+        gateAddress = deployments.contracts.EligibilityGateTLS.address;
         if (!gateAddress) {
           throw new Error(`EligibilityGateTLS address not found in ${deploymentsPath}`);
         }

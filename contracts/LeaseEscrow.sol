@@ -3,7 +3,7 @@ pragma solidity ^0.8.24;
 
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "./PolicyRegistry.sol";
-import "./EligibilityGate.sol";
+import "./interfaces/IEligibility.sol";
 import "./lib/Domain.sol";
 
 /**
@@ -16,7 +16,7 @@ contract LeaseEscrow is ReentrancyGuard {
 
     // Dependencies
     PolicyRegistry public immutable policyRegistry;
-    EligibilityGate public immutable eligibilityGate;
+    IEligibility public immutable eligibilityGate;
 
     // Lease structure
     struct Lease {
@@ -59,7 +59,7 @@ contract LeaseEscrow is ReentrancyGuard {
         require(_eligibilityGate != address(0), "LeaseEscrow: Invalid eligibility gate");
         
         policyRegistry = PolicyRegistry(_policyRegistry);
-        eligibilityGate = EligibilityGate(_eligibilityGate);
+        eligibilityGate = IEligibility(_eligibilityGate);
     }
 
     /**

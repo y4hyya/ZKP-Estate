@@ -128,18 +128,21 @@ Thumbs.db
 *.swo
 *~
 
-# Noir circuits
-circuits/*/target/
-circuits/*/prover.toml
-circuits/*/verifier.toml
-
 # Frontend build
 frontend/dist/
 frontend/build/
 frontend/.next/
 frontend/out/
 
+# Compiled contract artifacts (root level)
+*.abi
+*.bin
+
+# Duplicate package-lock files
+package-lock\ *.json
+
 # Test artifacts
 test-results/
 coverage/
-hardhat.config.ts
+
+.claude

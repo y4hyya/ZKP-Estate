@@ -26,6 +26,8 @@ interface CreatePolicyFormProps {
 
 export default function CreatePolicyForm({ onPropertyCreated }: CreatePolicyFormProps) {
   const [formData, setFormData] = useState({
+    title: '',
+    location: '',
     rentAmount: '',
     deposit: '',
     duration: '',
@@ -59,6 +61,8 @@ export default function CreatePolicyForm({ onPropertyCreated }: CreatePolicyForm
       // Call the callback to add property to the list
       if (onPropertyCreated) {
         onPropertyCreated({
+          title: formData.title,
+          location: formData.location,
           rentAmount: formData.rentAmount,
           deposit: formData.deposit,
           duration: parseInt(formData.duration),
@@ -72,6 +76,8 @@ export default function CreatePolicyForm({ onPropertyCreated }: CreatePolicyForm
       
       // Reset form
       setFormData({
+        title: '',
+        location: '',
         rentAmount: '',
         deposit: '',
         duration: '',
@@ -189,6 +195,37 @@ export default function CreatePolicyForm({ onPropertyCreated }: CreatePolicyForm
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label className="block text-sm font-medium text-secondary-700 dark:text-secondary-300 mb-2">
+                Property Title
+              </label>
+              <input
+                type="text"
+                name="title"
+                value={formData.title}
+                onChange={handleChange}
+                placeholder="e.g., Modern 2BR Apartment in Downtown"
+                className="input"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-secondary-700 dark:text-secondary-300 mb-2">
+                Location
+              </label>
+              <input
+                type="text"
+                name="location"
+                value={formData.location}
+                onChange={handleChange}
+                placeholder="e.g., Downtown, Istanbul"
+                className="input"
+                required
+              />
+            </div>
+          </div>
+
           <div>
             <label className="block text-sm font-medium text-secondary-700 dark:text-secondary-300 mb-2">
               Property Details
@@ -197,7 +234,7 @@ export default function CreatePolicyForm({ onPropertyCreated }: CreatePolicyForm
               name="propertyDetails"
               value={formData.propertyDetails}
               onChange={handleChange}
-              placeholder="Describe your property (e.g., Modern 2BR apartment in downtown)"
+              placeholder="Describe your property in detail (amenities, features, etc.)"
               className="input h-24 resize-none"
               required
             />
@@ -479,6 +516,8 @@ export default function CreatePolicyForm({ onPropertyCreated }: CreatePolicyForm
               type="button"
               onClick={() => {
                 setFormData({
+                  title: '',
+                  location: '',
                   rentAmount: '',
                   deposit: '',
                   duration: '',

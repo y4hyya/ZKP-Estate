@@ -6,8 +6,29 @@ import { publicProvider } from 'wagmi/providers/public';
 import { RainbowKitProvider, getDefaultWallets } from '@rainbow-me/rainbowkit';
 import '@rainbow-me/rainbowkit/styles.css';
 
+// Define localhost chain with correct chain ID
+const localhostChain = {
+  ...localhost,
+  id: 1337,
+  name: 'Hardhat Local',
+  network: 'hardhat',
+  nativeCurrency: {
+    decimals: 18,
+    name: 'Ether',
+    symbol: 'ETH',
+  },
+  rpcUrls: {
+    default: {
+      http: ['http://localhost:8545'],
+    },
+    public: {
+      http: ['http://localhost:8545'],
+    },
+  },
+};
+
 const { chains, publicClient } = configureChains(
-  [localhost],
+  [localhostChain],
   [publicProvider()]
 );
 

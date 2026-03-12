@@ -1,6 +1,6 @@
 'use client';
 
-import { ConnectButton } from '@rainbow-me/rainbowkit';
+import CustomConnectButton from './CustomConnectButton';
 import { Shield, Home, BookOpen, Info, HelpCircle } from 'lucide-react';
 import { useState } from 'react';
 
@@ -54,7 +54,7 @@ export default function Header() {
                 <span>About</span>
               </button>
             </nav>
-            <ConnectButton />
+            <CustomConnectButton />
           </div>
         </div>
         

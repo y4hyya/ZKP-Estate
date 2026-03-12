@@ -1,4 +1,5 @@
 import Fastify from 'fastify';
+import cors from '@fastify/cors';
 import { ethers } from 'ethers';
 import dotenv from 'dotenv';
 import { AttestorSigner } from './sign.js';
@@ -31,7 +32,7 @@ const attestorSigner = new AttestorSigner(ATTESTOR_PK);
 const tlsnVerifier = new TLSNotaryVerifier();
 
 // CORS configuration
-app.register(require('@fastify/cors'), {
+app.register(cors, {
   origin: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']

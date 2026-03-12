@@ -111,13 +111,13 @@ Examples:
   // Check if tenant is eligible
   try {
     const eligibilityGateAddress = await leaseEscrow.getEligibilityGate();
-    const EligibilityGate = await ethers.getContractFactory("EligibilityGate");
-    const eligibilityGate = EligibilityGate.attach(eligibilityGateAddress);
-    
+    const EligibilityGateTLS = await ethers.getContractFactory("EligibilityGateTLS");
+    const eligibilityGate = EligibilityGateTLS.attach(eligibilityGateAddress);
+
     const isEligible = await eligibilityGate.isEligible(tenant.address, policyId);
     if (!isEligible) {
       console.error(`❌ Tenant is not eligible for policy ${policyId}`);
-      console.error("   Please submit a ZK proof first using: npm run scripts:submitZk");
+      console.error("   Please submit a TLS attestation first.");
       process.exit(1);
     }
     console.log(`✅ Tenant is eligible for policy ${policyId}`);

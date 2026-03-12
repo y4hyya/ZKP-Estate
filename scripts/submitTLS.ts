@@ -97,11 +97,7 @@ async function main() {
       if (fs.existsSync(deploymentsPath)) {
         const deployments = JSON.parse(fs.readFileSync(deploymentsPath, 'utf8'));
         
-        if (deployments.gateMode !== 'TLS') {
-          throw new Error(`GATE_MODE is not TLS. Current mode: ${deployments.gateMode}. Please deploy with GATE_MODE=TLS.`);
-        }
-        
-        gateAddress = deployments.contracts.EligibilityGate.address;
+        gateAddress = deployments.contracts.EligibilityGateTLS.address;
         if (!gateAddress) {
           throw new Error(`EligibilityGateTLS address not found in ${deploymentsPath}`);
         }
